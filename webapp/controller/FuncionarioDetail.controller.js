@@ -59,18 +59,9 @@ sap.ui.define(
       /* ====================== CRIAÇÃO ============================ */
       /* =========================================================== */
       _onCreateMatched: function () {
-        const oModel = this.getView().getModel();
-
-        // Cria um novo registro localmente
-        const oContext = oModel.createEntry("/FuncionarioSet", {
-          properties: {
-            NAME: "",
-            DEPARTMENT: "",
-            SALARY: "0.00",
-          },
-        });
-
-        this.getView().setBindingContext(oContext);
+        this.getView().byId("inputName").setValue("");
+        this.getView().byId("inputDepartment").setValue("");
+        this.getView().byId("inputSalary").setValue("");
       },
 
       /* =========================================================== */
@@ -80,26 +71,41 @@ sap.ui.define(
         // Supondo que você tenha o modelo OData V2 registrado no manifest
         const oModel = this.getView().getModel();
 
-        // Caminho da entidade a ser atualizada
-        const sPath = oEvent.getSource().getBindingContext().getPath(); // ou conforme sua key
-
         // Dados novos
         const oData = {
-          "NAME": this.getView().byId("_IDGenInput").getValue(),
-          "DEPARTMENT": this.getView().byId("_IDGenInput1").getValue(),
-          "SALARY": this.getView().byId("_IDGenInput2").getValue()
+          "NAME": this.getView().byId("inputName").getValue(),
+          "DEPARTMENT": this.getView().byId("inputDepartment").getValue(),
+          "SALARY": this.getView().byId("inputSalary").getValue()
         };
 
-        // Chamada do update
-        oModel.update(sPath, oData, {
-          success: function () {
-            sap.m.MessageToast.show("Registro atualizado com sucesso!");
-            this.onNavBack();
-          },
-          error: function (oError) {
-            sap.m.MessageBox.error("Erro ao atualizar: " + oError.message);
-          },
-        });
+        let sPath = '/FuncionarioSet';
+        const oContext = oEvent.getSource().getBindingContext()
+        if (oContext) {
+          sPath = oContext.getPath(); // ou conforme sua key
+          // Chamada do update
+          oModel.update(sPath, oData, {
+            success: async () => {
+             await sap.m.MessageToast.show("Registro atualizado com sucesso!");
+              this.onNavBack();
+            },
+            error:  (oError) => {
+              sap.m.MessageBox.error("Erro ao atualizar: " + oError.message);
+            },
+          });
+        } else {
+          // Chamada do create
+          let that = this;
+          oModel.create(sPath, oData, {
+            success: async function () {
+            await  sap.m.MessageToast.show("Registro criado com sucesso!");
+              that.onNavBack();
+            },
+            error: function (oError) {
+              sap.m.MessageBox.error("Erro ao atualizar: " + oError.message);
+            },
+          });
+        }
+
       },
 
       /* =========================================================== */
